@@ -2,62 +2,114 @@ package com.example.serviceexample.service
 
 import android.app.Service
 import android.content.Intent
-import android.os.IBinder
+import android.os.*
 import android.util.Log
+import android.widget.Toast
+import androidx.core.app.NotificationCompat
+import com.example.serviceexample.service.DownloadNotification.MAX_PROGRESS
 
 /**
  * 다운로드 서비스 예제는 IntentService를 상속하지 않는다.
  * 이유는 동시에 여러 작업 요청(멀티 스레딩)을 처라하기 위해서 Service를 상속받아 구현한다.
  */
 class DownloadService : Service() {
-    private var mThread: Thread? = null
+    companion object {
+        const val NOTIFICATION_ID = 7
+    }
+
+    private lateinit var handlerThread: HandlerThread
+    private lateinit var notificationBuilder: NotificationCompat.Builder
+
+    private var serviceLooper: Looper? = null
+    private var serviceHandler: ServiceHandler? = null
+
+    private inner class ServiceHandler(looper: Looper) : Handler(looper) {
+        private var progressCurrent = 0
+        override fun handleMessage(msg: Message) {
+            while (progressCurrent <= MAX_PROGRESS) {
+                Log.d("DownloadService", "onStartCommand:$progressCurrent")
+                try {
+                    notificationBuilder.setProgress(MAX_PROGRESS, progressCurrent++, false)
+                        .let { DownloadNotification.notify(it) }
+                    Thread.sleep(1000)
+                } catch (e: InterruptedException) {
+                    Thread.currentThread().interrupt()
+                    break
+                }
+            }
+            if (progressCurrent >= MAX_PROGRESS) completeDownload()
+            else if (progressCurrent < MAX_PROGRESS) cancelDownload()
+        }
+
+        private fun cancelDownload() {
+            Toast.makeText(this@DownloadService, "다운로드를 취소했습니다.", Toast.LENGTH_SHORT).show()
+        }
+
+        private fun completeDownload() {
+            Log.d("DownloadService", "onDownloadFinished")
+
+            progressCurrent = 0
+            notificationBuilder.setContentText("Download complete")
+                .let { DownloadNotification.notify(it) }
+            Toast.makeText(this@DownloadService, "다운로드가 완료되었습니다.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
 
     override fun onCreate() {
         Log.d("DownloadService", "onCreate")
+        handlerThread =
+            HandlerThread("DownloadStartArguments", Process.THREAD_PRIORITY_BACKGROUND).apply {
+                start()
+                serviceLooper = looper
+                serviceHandler = ServiceHandler(looper)
+            }
         super.onCreate()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d("DownloadService", "onStartCommand")
-        if (mThread == null) {
-            mThread = Thread {
-                when (intent?.action) {
-                    DownloadAction.ACTION_START_DOWNLOAD -> startDownload()
-                    DownloadAction.ACTION_STOP_DOWNLOAD -> {
-                        // do something..
-                        stopSelf()
-                    }
-                    DownloadAction.ACTION_FINISHED_DOWNLOAD -> {
-                        // do something..
-                    }
+        Log.d("DownloadService", "onStartCommand: ${intent?.action}")
+        when (intent?.action) {
+            DownloadAction.ACTION_START_DOWNLOAD -> {
+                startForegroundService()
+                serviceHandler?.obtainMessage()?.also { msg ->
+                    msg.arg1 = startId
+                    serviceHandler?.sendMessage(msg)
                 }
             }
-            mThread?.start()
+            DownloadAction.ACTION_PAUSE_DOWNLOAD -> {
+                // do something..
+            }
+            DownloadAction.ACTION_CONTINUE_DOWNLOAD -> {
+            }
+            DownloadAction.ACTION_CANCEL_DOWNLOAD -> stopForegroundService()
         }
+
         return START_STICKY
     }
 
 
     override fun onDestroy() {
         Log.d("DownloadService", "onDestroy")
-        stopThread()
         super.onDestroy()
     }
 
-    private fun startDownload() {
-        for (i in 0..5) {
-            try {
-                Thread.sleep(1000)
-                Log.d("DownloadService", "onStartCommand: $i")
-            } catch (e: InterruptedException) {
-                break
-            }
-        }
+
+    /**
+     * Foreground Service
+     * 다른 component에서 startForegroundService(intent)를 호출하고
+     * 5초이내에 startForeground(id, notification)이 응답하지 않을 경우 ANR이 발생한다.
+     */
+    private fun startForegroundService() {
+        notificationBuilder = DownloadNotification.createNotificationBuilder(this)
+        startForeground(NOTIFICATION_ID, notificationBuilder.build())
     }
 
-    private fun stopThread() {
-        mThread?.interrupt()
-        mThread = null
+    private fun stopForegroundService() {
+        handlerThread.interrupt()
+        serviceHandler?.removeCallbacksAndMessages(null)
+        stopForeground(true)
+        stopSelf()
     }
 
     /**

@@ -21,13 +21,13 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         downloadIntent = Intent(this, DownloadService::class.java)
 
         binding.btStartService.setOnClickListener(this)
-        binding.btStopService.setOnClickListener(this)
+        binding.btCancelService.setOnClickListener(this)
     }
 
     override fun onClick(view: View?) {
         when (view?.id) {
             R.id.bt_start_service -> onStartService()
-            R.id.bt_stop_service -> onStopService()
+            R.id.bt_cancel_service -> onStopService()
         }
     }
 
@@ -43,7 +43,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     private fun onStopService() {
-        Log.d("MainActivity", "onStopDownload")
-        stopService(downloadIntent)
+        downloadIntent.action = DownloadAction.ACTION_CANCEL_DOWNLOAD
+        startService(downloadIntent)
     }
 }

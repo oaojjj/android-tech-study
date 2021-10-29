@@ -26,11 +26,11 @@
         android:text="다운로드 시작"
         android:textSize="14sp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/bt_stop_service"
+        app:layout_constraintEnd_toStartOf="@+id/bt_cancel_service"
         app:layout_constraintStart_toStartOf="parent" />
 
     <Button
-        android:id="@+id/bt_stop_service"
+        android:id="@+id/bt_cancel_service"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="다운로드 종료"
