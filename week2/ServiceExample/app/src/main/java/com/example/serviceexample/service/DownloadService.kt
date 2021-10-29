@@ -6,11 +6,6 @@ import android.os.Binder
 import android.os.IBinder
 import android.util.Log
 
-/**
- * Service는 별도로 Thread를 동작하지 않는 이상 기본적으로 UI Thread에서 동작한다.
- * 백그라운드에서 최대 15분 정도 실행될 수 있고, 메모리가 부족하거나 시간을 초과할 경우 강제로 종료될 수 있다.
- * 계속 실행하게 하려면 포그라운드 서비스를 사용해야한다.
- */
 class DownloadService : Service() {
     private val mBinder = MyBinder()
     private var mThread: Thread? = null
@@ -28,15 +23,16 @@ class DownloadService : Service() {
                     DownloadAction.ACTION_START_DOWNLOAD -> startDownload()
                     DownloadAction.ACTION_STOP_DOWNLOAD -> {
                         // do something..
+                        stopSelf()
                     }
                     DownloadAction.ACTION_FINISHED_DOWNLOAD -> {
                         // do something..
                     }
                 }
             }
+            mThread?.start()
         }
-        mThread!!.start()
-        return START_REDELIVER_INTENT
+        return START_STICKY
     }
 
 
@@ -47,7 +43,7 @@ class DownloadService : Service() {
     }
 
     private fun startDownload() {
-        for (i in 0..100) {
+        for (i in 0..5) {
             try {
                 Thread.sleep(1000)
                 Log.d("DownloadService", "onStartCommand: $i")
