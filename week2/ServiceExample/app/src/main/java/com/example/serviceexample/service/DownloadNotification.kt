@@ -15,7 +15,7 @@ object DownloadNotification {
     private const val CHANNEL_ID = "DOWNLOAD_SERVICE"
     private const val INTENT_REQUEST_CODE = 0
 
-    const val MAX_PROGRESS = 3
+    const val MAX_PROGRESS = 10
 
     private lateinit var notificationManager: NotificationManager
     private lateinit var pendingIntent: PendingIntent

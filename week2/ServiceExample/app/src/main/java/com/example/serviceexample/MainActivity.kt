@@ -17,7 +17,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
-
+        
         downloadIntent = Intent(this, DownloadService::class.java)
 
         binding.btStartService.setOnClickListener(this)
