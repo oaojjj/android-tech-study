@@ -20,32 +20,12 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
-        android:id="@+id/bt_start_bound"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="다운로드 시작(바인딩)"
-        android:textSize="14sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/bt_stop_bound"
-        app:layout_constraintStart_toStartOf="parent" />
-
-    <Button
-        android:id="@+id/bt_stop_bound"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="다운로드 중지(바인딩)"
-        android:textSize="14sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/bt_start_bound" />
-
-    <Button
         android:id="@+id/bt_start_service"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="다운로드 시작"
         android:textSize="14sp"
-        app:layout_constraintBottom_toTopOf="@+id/bt_start_bound"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/bt_stop_service"
         app:layout_constraintStart_toStartOf="parent" />
 
@@ -55,7 +35,7 @@
         android:layout_height="wrap_content"
         android:text="다운로드 종료"
         android:textSize="14sp"
-        app:layout_constraintBottom_toTopOf="@+id/bt_stop_bound"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/bt_start_service" />
 
@@ -65,7 +45,6 @@
         android:layout_height="wrap_content"
         android:hint="이미지 URL을 입력하세요"
         android:minHeight="48dp"
-        android:onClick=""
         app:layout_constraintBottom_toTopOf="@+id/bt_start_service"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />

@@ -2,12 +2,14 @@ package com.example.serviceexample.service
 
 import android.app.Service
 import android.content.Intent
-import android.os.Binder
 import android.os.IBinder
 import android.util.Log
 
+/**
+ * 다운로드 서비스 예제는 IntentService를 상속하지 않는다.
+ * 이유는 동시에 여러 작업 요청(멀티 스레딩)을 처라하기 위해서 Service를 상속받아 구현한다.
+ */
 class DownloadService : Service() {
-    private val mBinder = MyBinder()
     private var mThread: Thread? = null
 
     override fun onCreate() {
@@ -61,15 +63,10 @@ class DownloadService : Service() {
     /**
      * Bound Service
      * 서비스와의 통신을 위해 Ibinder 인터페이스를 정의하는 binder를 통해 service를 반환할 수 있다.
+     * 사용하지 않느다면 null을 반환한다.
      */
-    inner class MyBinder : Binder() {
-        fun getService(): DownloadService {
-            return this@DownloadService
-        }
-    }
-
     override fun onBind(intent: Intent?): IBinder? {
-        return mBinder
+        return null
     }
 
 }
