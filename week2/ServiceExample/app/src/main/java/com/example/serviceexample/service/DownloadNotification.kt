@@ -11,12 +11,15 @@ import androidx.core.app.NotificationCompat
 import com.example.serviceexample.MainActivity
 import com.example.serviceexample.R
 
-object DownloadNotification {
-    private const val CHANNEL_ID = "DOWNLOAD_SERVICE"
-    private const val INTENT_REQUEST_CODE = 0
+class DownloadNotification {
+    companion object {
+        private const val CHANNEL_ID = "DOWNLOAD_SERVICE"
+        var INTENT_REQUEST_CODE = -1
+        const val MAX_PROGRESS = 100
+    }
 
-    const val MAX_PROGRESS = 10
-
+    private var notiID: Int = 0
+    lateinit var builder: NotificationCompat.Builder
     private lateinit var notificationManager: NotificationManager
     private lateinit var pendingIntent: PendingIntent
     private lateinit var pauseDownloadIntent: PendingIntent
@@ -24,8 +27,14 @@ object DownloadNotification {
     private lateinit var cancelDownloadIntent: PendingIntent
 
     private fun initIntent(context: Context) {
+        INTENT_REQUEST_CODE++
         pendingIntent = Intent(context, MainActivity::class.java).let {
-            PendingIntent.getActivity(context, INTENT_REQUEST_CODE, it, 0)
+            PendingIntent.getActivity(
+                context,
+                INTENT_REQUEST_CODE,
+                it,
+                PendingIntent.FLAG_UPDATE_CURRENT
+            )
         }
 
         pauseDownloadIntent =
@@ -39,7 +48,13 @@ object DownloadNotification {
     private fun createServiceIntent(context: Context, action: String) =
         Intent(context, DownloadService::class.java).let {
             it.action = action
-            PendingIntent.getService(context, INTENT_REQUEST_CODE, it, 0)
+            it.putExtra("id", notiID)
+            PendingIntent.getService(
+                context,
+                INTENT_REQUEST_CODE,
+                it,
+                PendingIntent.FLAG_UPDATE_CURRENT
+            )
         }
 
     /**
@@ -57,10 +72,11 @@ object DownloadNotification {
         notificationManager.createNotificationChannel(notificationChannel)
     }
 
-    fun createNotificationBuilder(context: Context): NotificationCompat.Builder {
+    fun createNotificationBuilder(context: Context, id: Int): NotificationCompat.Builder {
+        notiID = id
         initIntent(context)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) createNotificationChannel(context)
-        return NotificationCompat.Builder(context, CHANNEL_ID)
+        builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setContentTitle("Download")
             .setContentText("downloading..")
             .setSmallIcon(R.mipmap.ic_launcher)
@@ -68,13 +84,10 @@ object DownloadNotification {
             .setContentIntent(pendingIntent)
             .addAction(R.drawable.pause_download, "pause", pauseDownloadIntent)
             .addAction(R.drawable.ic_baseline_close_24, "cancel", cancelDownloadIntent)
+        return builder
     }
 
-    fun notify(builder: NotificationCompat.Builder) {
-        notificationManager.notify(DownloadService.NOTIFICATION_ID, builder.build())
-    }
-
-    fun updateNotification(isDownloading: Boolean, builder: NotificationCompat.Builder) {
+    fun updateNotificationAction(isDownloading: Boolean): DownloadNotification {
         builder.clearActions()
         if (isDownloading)
             builder.addAction(R.drawable.pause_download, "pause", pauseDownloadIntent)
@@ -82,8 +95,24 @@ object DownloadNotification {
             builder.addAction(R.drawable.continue_download, "continue", continueDownloadIntent)
 
         builder.addAction(R.drawable.ic_baseline_close_24, "cancel", cancelDownloadIntent)
-
-        notificationManager.notify(DownloadService.NOTIFICATION_ID, builder.build())
+        return this
     }
 
+    fun updateProgress(value: Int) {
+        builder.setProgress(MAX_PROGRESS, value, false)
+        notificationManager.notify(notiID, builder.build())
+    }
+
+    fun clearNotification(text: String) {
+        builder.setContentText(text)
+            .clearActions()
+            .setProgress(0, 0, false)
+        notificationManager.notify(notiID, builder.build())
+    }
+
+    fun cancelNotification() {
+        notificationManager.cancel(notiID)
+    }
+
+    fun getNotification() = builder.build()
 }
