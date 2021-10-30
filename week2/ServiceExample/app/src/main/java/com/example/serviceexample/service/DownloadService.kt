@@ -21,7 +21,6 @@ class DownloadService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d("DownloadService", "onStartCommand: extraID:${intent?.getIntExtra("id", -1)}")
         val notiId = intent?.getIntExtra("id", startId) ?: startId
 
         Log.d("DownloadService", "onStartCommand: ${intent?.action}, $notiId")
@@ -59,6 +58,7 @@ class DownloadService : Service() {
         removeNoti(id)
         stopForeground(true)
         stopSelf(id)
+        if (notis.isEmpty()) stopSelf()
     }
 
     private fun removeNoti(id: Int) {
@@ -70,7 +70,7 @@ class DownloadService : Service() {
      * worker thread
      * UI 및 다운로드 처리
      */
-    inner class ServiceThread(id: Int) : Thread() {
+    inner class ServiceThread(var id: Int) : Thread() {
         private var progressCurrent = 0
         var downloadNotification =
             DownloadNotification().apply { createNotificationBuilder(this@DownloadService, id) }
@@ -95,6 +95,7 @@ class DownloadService : Service() {
             progressCurrent = 0
             downloadNotification.clearNotification("다운로드가 완료되었습니다.")
             showToast("다운로드가 완료되었습니다.")
+            stopForegroundService(id)
         }
 
         private fun cancelDownload() {
