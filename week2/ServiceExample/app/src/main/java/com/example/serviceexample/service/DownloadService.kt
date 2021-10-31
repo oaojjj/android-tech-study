@@ -19,6 +19,10 @@ class DownloadService : Service() {
         super.onCreate()
     }
 
+    /**
+     * Started Service
+     * intent의 action에 따라 service를 처리할 수 있다.
+     */
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val notiId = intent?.getIntExtra("notificationId", startId) ?: startId
         Log.d("DownloadService", "onStartCommand: ${intent?.action}, $notiId")
@@ -28,9 +32,15 @@ class DownloadService : Service() {
             DownloadAction.ACTION_PAUSE_DOWNLOAD -> notis[notiId]?.updateNotification(false)
             DownloadAction.ACTION_CONTINUE_DOWNLOAD -> notis[notiId]?.updateNotification(true)
             DownloadAction.ACTION_CANCEL_DOWNLOAD -> stopForegroundService(notiId)
+            DownloadAction.ACTION_CLICK_NOTIFICATION -> clickNotification(notiId)
         }
 
         return START_REDELIVER_INTENT
+    }
+
+    // click event
+    private fun clickNotification(notiId: Int) {
+        TODO("Not yet implemented")
     }
 
     override fun onDestroy() {
@@ -51,15 +61,17 @@ class DownloadService : Service() {
     }
 
     private fun stopForegroundService(id: Int) {
-        Log.d("DownloadService", "stopForegroundService: $id ,${notis[id]}")
-        stopServiceThread(id)
+        Log.d("DownloadService", "stopForegroundService: $id")
+        removeNotification(id)
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) stopForeground(STOP_FOREGROUND_DETACH)
         else stopForeground(true)
+
         stopSelf(id)
         if (notis.isEmpty()) stopSelf()
     }
 
-    private fun stopServiceThread(id: Int) {
+    private fun removeNotification(id: Int) {
         notis[id]?.stopThread()
         notis.remove(id)
     }
@@ -71,6 +83,9 @@ class DownloadService : Service() {
     inner class ServiceThread(var id: Int) : Thread() {
         var notification =
             DownloadNotification(id).apply { createNotificationBuilder(this@DownloadService) }
+
+        // 일단 임시로 다운로드가 끝났는지 체크
+        var isComplete = false
 
         override fun run() {
             while (!notification.isReachedMaxProgress()) {
@@ -87,16 +102,22 @@ class DownloadService : Service() {
             else cancelDownload()
         }
 
+        // 이미지 다운로드 완료
         private fun completeDownload() {
             Log.d("DownloadService", "completeDownload")
+
+            isComplete = true
             notification.clearNotification("다운로드가 완료되었습니다.")
             showToast("다운로드가 완료되었습니다.")
             stopForegroundService(id)
         }
 
+        // 이미지 다운로드 취소
         private fun cancelDownload() {
             Log.d("DownloadService", "cancelDownload")
+            notification.clearNotification("다운로드가 취소되었습니다.")
             showToast("다운로드가 취소되었습니다.")
+            stopForegroundService(id)
         }
 
         fun updateNotification(isDownloading: Boolean) =
@@ -109,7 +130,6 @@ class DownloadService : Service() {
         fun stopThread() {
             Log.d("DownloadService", "stopThread:$id ")
             interrupt()
-            // notification.removeNotification()
         }
     }
 

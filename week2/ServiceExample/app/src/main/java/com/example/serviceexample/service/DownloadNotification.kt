@@ -13,10 +13,11 @@ import com.example.serviceexample.MainActivity
 import com.example.serviceexample.R
 
 class DownloadNotification(var notiId: Int) {
+
     companion object {
         private const val CHANNEL_ID = "DOWNLOAD_SERVICE"
         var INTENT_REQUEST_CODE = -1
-        const val MAX_PROGRESS = 2
+        const val MAX_PROGRESS = 5
     }
 
     private var currentProgress = 0
@@ -31,6 +32,7 @@ class DownloadNotification(var notiId: Int) {
     private fun initIntent(context: Context) {
         INTENT_REQUEST_CODE++
         pendingIntent = Intent(context, MainActivity::class.java).let {
+            it.putExtra("id", notiId)
             it.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
             PendingIntent.getActivity(
                 context,
