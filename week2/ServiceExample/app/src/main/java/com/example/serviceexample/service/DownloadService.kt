@@ -5,7 +5,6 @@ import android.content.Intent
 import android.os.*
 import android.util.Log
 import android.widget.Toast
-import com.example.serviceexample.service.DownloadNotification.Companion.MAX_PROGRESS
 import java.util.*
 
 /**
@@ -21,22 +20,17 @@ class DownloadService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val notiId = intent?.getIntExtra("id", startId) ?: startId
-
+        val notiId = intent?.getIntExtra("notificationId", startId) ?: startId
         Log.d("DownloadService", "onStartCommand: ${intent?.action}, $notiId")
+
         when (intent?.action) {
-            DownloadAction.ACTION_START_DOWNLOAD -> {
-                notis[notiId] = ServiceThread(notiId).apply { start() }
-                startForegroundService(notiId)
-            }
-            DownloadAction.ACTION_PAUSE_DOWNLOAD ->
-                notis[notiId]?.updateNotification(false)
-            DownloadAction.ACTION_CONTINUE_DOWNLOAD ->
-                notis[notiId]?.updateNotification(true)
+            DownloadAction.ACTION_START_DOWNLOAD -> startForegroundService(notiId)
+            DownloadAction.ACTION_PAUSE_DOWNLOAD -> notis[notiId]?.updateNotification(false)
+            DownloadAction.ACTION_CONTINUE_DOWNLOAD -> notis[notiId]?.updateNotification(true)
             DownloadAction.ACTION_CANCEL_DOWNLOAD -> stopForegroundService(notiId)
         }
 
-        return START_STICKY
+        return START_REDELIVER_INTENT
     }
 
     override fun onDestroy() {
@@ -50,18 +44,23 @@ class DownloadService : Service() {
      * 5초이내에 startForeground(id, notification)이 응답하지 않을 경우 ANR이 발생한다.
      */
     private fun startForegroundService(id: Int) {
-        startForeground(id, notis[id]?.downloadNotification?.getNotification())
+        with(notis) {
+            this[id] = ServiceThread(id).apply { start() }
+            startForeground(id, this[id]!!.notification.getNotification())
+        }
     }
 
     private fun stopForegroundService(id: Int) {
         Log.d("DownloadService", "stopForegroundService: $id ,${notis[id]}")
-        removeNoti(id)
-        stopForeground(true)
+        stopServiceThread(id)
+        stopForeground(false)
+        // 다운로드가 끝나면 알림으로 알려주고 계속 띄워놓고
+        // 알림을 클릭했을 때 서비스를 종료해주고 싶은데 도저히 모르겠음.
         stopSelf(id)
         if (notis.isEmpty()) stopSelf()
     }
 
-    private fun removeNoti(id: Int) {
+    private fun stopServiceThread(id: Int) {
         notis[id]?.stopThread()
         notis.remove(id)
     }
@@ -71,50 +70,48 @@ class DownloadService : Service() {
      * UI 및 다운로드 처리
      */
     inner class ServiceThread(var id: Int) : Thread() {
-        private var progressCurrent = 0
-        var downloadNotification =
-            DownloadNotification().apply { createNotificationBuilder(this@DownloadService, id) }
+        var notification =
+            DownloadNotification(id).apply { createNotificationBuilder(this@DownloadService) }
 
         override fun run() {
-            while (progressCurrent <= MAX_PROGRESS) {
-                Log.d("ServiceThread", "handleMessage:$progressCurrent")
+            while (!notification.isReachedMaxProgress()) {
+                Log.d("ServiceThread", "handleMessage:${notification.getCurrentProgress()}")
                 try {
-                    downloadNotification.updateProgress(progressCurrent++)
+                    notification.updateProgress()
                     sleep(1000)
                 } catch (e: InterruptedException) {
-                    cancelDownload()
                     break
                 }
             }
-            if (progressCurrent >= MAX_PROGRESS) completeDownload()
+
+            if (notification.isReachedMaxProgress()) completeDownload()
+            else cancelDownload()
         }
 
         private fun completeDownload() {
             Log.d("DownloadService", "completeDownload")
-
-            progressCurrent = 0
-            downloadNotification.clearNotification("다운로드가 완료되었습니다.")
+            notification.clearNotification("다운로드가 완료되었습니다.")
             showToast("다운로드가 완료되었습니다.")
             stopForegroundService(id)
         }
 
         private fun cancelDownload() {
             Log.d("DownloadService", "cancelDownload")
-            showToast("다운로드를 취소했습니다.")
+            showToast("다운로드가 취소되었습니다.")
         }
 
-        fun updateNotification(b: Boolean) = downloadNotification.updateNotificationAction(b)
+        fun updateNotification(isDownloading: Boolean) =
+            notification.changeNotificationAction(isDownloading)
 
         private fun showToast(text: String) = Handler(mainLooper).post {
             Toast.makeText(this@DownloadService, text, Toast.LENGTH_SHORT).show()
         }
 
         fun stopThread() {
-            Log.d("DownloadService", "stopThread: ")
-            downloadNotification.cancelNotification()
+            Log.d("DownloadService", "stopThread:$id ")
             interrupt()
+            // notification.removeNotification()
         }
-
     }
 
     /**

@@ -4,12 +4,11 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.view.View
 import com.example.serviceexample.databinding.ActivityMainBinding
 import com.example.serviceexample.service.DownloadAction
 import com.example.serviceexample.service.DownloadService
 
-class MainActivity : AppCompatActivity(), View.OnClickListener {
+class MainActivity : AppCompatActivity(){
     private val binding by lazy { ActivityMainBinding.inflate(layoutInflater) }
 
     private lateinit var downloadIntent: Intent
@@ -17,17 +16,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
-        
+
         downloadIntent = Intent(this, DownloadService::class.java)
 
-        binding.btStartService.setOnClickListener(this)
-        binding.btCancelService.setOnClickListener(this)
-    }
-
-    override fun onClick(view: View?) {
-        when (view?.id) {
-            R.id.bt_start_service -> onStartService()
-            R.id.bt_cancel_service -> onStopService()
+        binding.btStartService.setOnClickListener {
+            onStartService()
         }
     }
 

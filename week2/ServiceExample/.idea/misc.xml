@@ -4,10 +4,11 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="..\:/Users/USER/StudioProjects/android-tech-study/week2/ServiceExample/app/src/main/res/layout/activity_main.xml" value="0.264" />
+        <entry key="..\:/Users/oseong/AndroidStudioProjects/android-tech-study/week2/ServiceExample/app/src/main/res/layout/activity_main.xml" value="0.3333333333333333" />
       </map>
     </option>
   </component>
-  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="Android Studio default JDK" project-jdk-type="JavaSDK">
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" project-jdk-name="11" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/build/classes" />
   </component>
   <component name="ProjectType">

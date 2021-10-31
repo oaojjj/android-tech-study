@@ -1,5 +1,6 @@
 package com.example.serviceexample.service
 
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -11,14 +12,15 @@ import androidx.core.app.NotificationCompat
 import com.example.serviceexample.MainActivity
 import com.example.serviceexample.R
 
-class DownloadNotification {
+class DownloadNotification(var notiId: Int) {
     companion object {
         private const val CHANNEL_ID = "DOWNLOAD_SERVICE"
         var INTENT_REQUEST_CODE = -1
-        const val MAX_PROGRESS = 100
+        const val MAX_PROGRESS = 2
     }
 
-    private var notiID: Int = 0
+    private var currentProgress = 0
+
     lateinit var builder: NotificationCompat.Builder
     private lateinit var notificationManager: NotificationManager
     private lateinit var pendingIntent: PendingIntent
@@ -29,6 +31,7 @@ class DownloadNotification {
     private fun initIntent(context: Context) {
         INTENT_REQUEST_CODE++
         pendingIntent = Intent(context, MainActivity::class.java).let {
+            it.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
             PendingIntent.getActivity(
                 context,
                 INTENT_REQUEST_CODE,
@@ -48,7 +51,7 @@ class DownloadNotification {
     private fun createServiceIntent(context: Context, action: String) =
         Intent(context, DownloadService::class.java).let {
             it.action = action
-            it.putExtra("id", notiID)
+            it.putExtra("notificationId", notiId)
             PendingIntent.getService(
                 context,
                 INTENT_REQUEST_CODE,
@@ -72,8 +75,7 @@ class DownloadNotification {
         notificationManager.createNotificationChannel(notificationChannel)
     }
 
-    fun createNotificationBuilder(context: Context, id: Int): NotificationCompat.Builder {
-        notiID = id
+    fun createNotificationBuilder(context: Context): NotificationCompat.Builder {
         initIntent(context)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) createNotificationChannel(context)
         builder = NotificationCompat.Builder(context, CHANNEL_ID)
@@ -87,7 +89,7 @@ class DownloadNotification {
         return builder
     }
 
-    fun updateNotificationAction(isDownloading: Boolean): DownloadNotification {
+    fun changeNotificationAction(isDownloading: Boolean): DownloadNotification {
         builder.clearActions()
         if (isDownloading)
             builder.addAction(R.drawable.pause_download, "pause", pauseDownloadIntent)
@@ -98,21 +100,22 @@ class DownloadNotification {
         return this
     }
 
-    fun updateProgress(value: Int) {
-        builder.setProgress(MAX_PROGRESS, value, false)
-        notificationManager.notify(notiID, builder.build())
+    fun updateProgress() {
+        builder.setProgress(MAX_PROGRESS, ++currentProgress, false)
+        notificationManager.notify(notiId, builder.build())
     }
 
     fun clearNotification(text: String) {
-        builder.setContentText(text)
-            .clearActions()
-            .setProgress(0, 0, false)
-        notificationManager.notify(notiID, builder.build())
+        currentProgress = 0
+        builder.setContentText(text).clearActions().setProgress(0, 0, false)
+        notificationManager.notify(notiId, builder.build())
     }
 
-    fun cancelNotification() {
-        notificationManager.cancel(notiID)
+    fun removeNotification() {
+        notificationManager.cancel(notiId)
     }
 
-    fun getNotification() = builder.build()
+    fun getNotification() = builder.build().apply { flags = Notification.FLAG_AUTO_CANCEL }
+    fun getCurrentProgress(): Int = currentProgress
+    fun isReachedMaxProgress(): Boolean = MAX_PROGRESS <= currentProgress
 }
