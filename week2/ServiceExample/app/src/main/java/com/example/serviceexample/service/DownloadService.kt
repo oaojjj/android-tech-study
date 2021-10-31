@@ -53,9 +53,8 @@ class DownloadService : Service() {
     private fun stopForegroundService(id: Int) {
         Log.d("DownloadService", "stopForegroundService: $id ,${notis[id]}")
         stopServiceThread(id)
-        stopForeground(false)
-        // 다운로드가 끝나면 알림으로 알려주고 계속 띄워놓고
-        // 알림을 클릭했을 때 서비스를 종료해주고 싶은데 도저히 모르겠음.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) stopForeground(STOP_FOREGROUND_DETACH)
+        else stopForeground(true)
         stopSelf(id)
         if (notis.isEmpty()) stopSelf()
     }
