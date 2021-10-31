@@ -6,6 +6,7 @@ import android.os.*
 import android.util.Log
 import android.widget.Toast
 import java.util.*
+import kotlin.concurrent.thread
 
 /**
  * 다운로드 서비스 예제는 IntentService를 상속하지 않는다.
@@ -64,7 +65,7 @@ class DownloadService : Service() {
         Log.d("DownloadService", "stopForegroundService: $id")
         removeNotification(id)
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) stopForeground(STOP_FOREGROUND_DETACH)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) stopForeground(STOP_FOREGROUND_REMOVE)
         else stopForeground(true)
 
         stopSelf(id)
@@ -129,6 +130,7 @@ class DownloadService : Service() {
 
         fun stopThread() {
             Log.d("DownloadService", "stopThread:$id ")
+            notification.removeNotification()
             interrupt()
         }
     }
