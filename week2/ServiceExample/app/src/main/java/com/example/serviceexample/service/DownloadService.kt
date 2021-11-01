@@ -2,18 +2,26 @@ package com.example.serviceexample.service
 
 import android.app.Service
 import android.content.Intent
+import android.net.Uri
 import android.os.*
 import android.util.Log
 import android.widget.Toast
+import com.example.serviceexample.MainActivity
+import java.io.BufferedInputStream
+import java.net.URL
 import java.util.*
-import kotlin.concurrent.thread
+import android.os.Environment
+import java.io.File
+import java.io.FileOutputStream
+import java.text.SimpleDateFormat
+
 
 /**
  * 다운로드 서비스 예제는 IntentService를 상속하지 않는다.
  * 이유는 동시에 여러 작업 요청(멀티 스레딩)을 처라하기 위해서 Service를 상속받아 구현한다.
  */
 class DownloadService : Service() {
-    private var notis = mutableMapOf<Int, ServiceThread>()
+    private var threads = mutableMapOf<Int, ServiceThread>()
 
     override fun onCreate() {
         Log.d("DownloadService", "onCreate")
@@ -26,12 +34,13 @@ class DownloadService : Service() {
      */
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val notiId = intent?.getIntExtra("notificationId", startId) ?: startId
+        val imageUrl = intent?.getStringExtra("imageUrl") ?: "null"
         Log.d("DownloadService", "onStartCommand: ${intent?.action}, $notiId")
 
         when (intent?.action) {
-            DownloadAction.ACTION_START_DOWNLOAD -> startForegroundService(notiId)
-            DownloadAction.ACTION_PAUSE_DOWNLOAD -> notis[notiId]?.updateNotification(false)
-            DownloadAction.ACTION_CONTINUE_DOWNLOAD -> notis[notiId]?.updateNotification(true)
+            DownloadAction.ACTION_START_DOWNLOAD -> startForegroundService(notiId, imageUrl)
+            DownloadAction.ACTION_PAUSE_DOWNLOAD -> threads[notiId]?.updateNotification(false)
+            DownloadAction.ACTION_CONTINUE_DOWNLOAD -> threads[notiId]?.updateNotification(true)
             DownloadAction.ACTION_CANCEL_DOWNLOAD -> stopForegroundService(notiId)
             DownloadAction.ACTION_CLICK_NOTIFICATION -> clickNotification(notiId)
         }
@@ -54,9 +63,9 @@ class DownloadService : Service() {
      * 다른 component에서 startForegroundService(intent)를 호출하고
      * 5초이내에 startForeground(id, notification)이 응답하지 않을 경우 ANR이 발생한다.
      */
-    private fun startForegroundService(id: Int) {
-        with(notis) {
-            this[id] = ServiceThread(id).apply { start() }
+    private fun startForegroundService(id: Int, imageUrl: String) {
+        with(threads) {
+            this[id] = ServiceThread(id, imageUrl).apply { start() }
             startForeground(id, this[id]!!.notification.getNotification())
         }
     }
@@ -69,53 +78,94 @@ class DownloadService : Service() {
         else stopForeground(true)
 
         stopSelf(id)
-        if (notis.isEmpty()) stopSelf()
+        if (threads.isEmpty()) stopSelf()
     }
 
     private fun removeNotification(id: Int) {
-        notis[id]?.stopThread()
-        notis.remove(id)
+        threads[id]?.notification!!.removeNotification()
+        threads.remove(id)
     }
 
     /**
      * worker thread
      * UI 및 다운로드 처리
      */
-    inner class ServiceThread(var id: Int) : Thread() {
+    inner class ServiceThread(var id: Int, var imageUrl: String) : Thread() {
         var notification =
             DownloadNotification(id).apply { createNotificationBuilder(this@DownloadService) }
-
-        // 일단 임시로 다운로드가 끝났는지 체크
-        var isComplete = false
+        private val savePath = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS).toString()
+        private var localPath = savePath
 
         override fun run() {
-            while (!notification.isReachedMaxProgress()) {
-                Log.d("ServiceThread", "handleMessage:${notification.getCurrentProgress()}")
-                try {
-                    notification.updateProgress()
-                    sleep(1000)
-                } catch (e: InterruptedException) {
-                    break
-                }
-            }
-
+            Log.d("DownloadThread", "run: $savePath")
+            downloading()
             if (notification.isReachedMaxProgress()) completeDownload()
             else cancelDownload()
         }
 
+
+        // 이미지 다운로드
+        private fun downloading() {
+            Log.d("DownloadThread", "downloading: $imageUrl")
+            // save path
+            val fileName =
+                SimpleDateFormat("yyyyMMdd_HHmmss", Locale.KOREA).format(Date()).toString()
+            localPath = "$savePath/$fileName.jpg"
+            val file = File(localPath)
+
+            // read, write stream
+            val url = URL(imageUrl)
+            val connection = url.openConnection().apply { connect() }
+
+            val inputStream = BufferedInputStream(url.openStream())
+            val outputStream = FileOutputStream(file)
+            val data = ByteArray(1024)
+            var total: Long = 0
+            var count: Int
+
+            while (inputStream.read(data)
+                    .also { count = it } != -1 || !notification.isReachedMaxProgress()
+            ) {
+                try {
+                    Log.d(
+                        "DownloadThread",
+                        "downloading: $total ,${(total * 100 / connection.contentLength)}"
+                    )
+                    outputStream.write(data, 0, count)
+
+                    total += count.toLong()
+                    notification.updateProgress((total * 100 / connection.contentLength).toInt())
+                } catch (e: InterruptedException) {
+                    break
+                }
+            }
+            inputStream.close()
+            outputStream.close()
+
+            Log.d("DownloadThread", "downloading: $file")
+            sendBroadcast(Intent(Intent.ACTION_MEDIA_SCANNER_FINISHED, Uri.fromFile(file)))
+        }
+
+
         // 이미지 다운로드 완료
         private fun completeDownload() {
-            Log.d("DownloadService", "completeDownload")
+            Log.d("DownloadThread", "completeDownload")
 
-            isComplete = true
             notification.clearNotification("다운로드가 완료되었습니다.")
             showToast("다운로드가 완료되었습니다.")
             stopForegroundService(id)
+            startActivity(Intent(applicationContext, MainActivity::class.java).apply {
+                action = DownloadAction.ACTION_COMPLETE_DOWNLOAD
+                flags =
+                    Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                putExtra("image", localPath)
+            })
         }
 
         // 이미지 다운로드 취소
         private fun cancelDownload() {
-            Log.d("DownloadService", "cancelDownload")
+            Log.d("DownloadThread", "cancelDownload")
+
             notification.clearNotification("다운로드가 취소되었습니다.")
             showToast("다운로드가 취소되었습니다.")
             stopForegroundService(id)
@@ -129,10 +179,10 @@ class DownloadService : Service() {
         }
 
         fun stopThread() {
-            Log.d("DownloadService", "stopThread:$id ")
-            notification.removeNotification()
+            Log.d("DownloadThread", "stopThread:$id ")
             interrupt()
         }
+
     }
 
     /**

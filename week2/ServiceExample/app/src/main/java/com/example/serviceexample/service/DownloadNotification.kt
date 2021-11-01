@@ -102,8 +102,9 @@ class DownloadNotification(var notiId: Int) {
         return this
     }
 
-    fun updateProgress() {
-        builder.setProgress(MAX_PROGRESS, ++currentProgress, false)
+    fun updateProgress(progress: Int) {
+        currentProgress = progress
+        builder.setProgress(MAX_PROGRESS, currentProgress, false)
         notificationManager.notify(notiId, builder.build())
     }
 
