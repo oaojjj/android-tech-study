@@ -17,7 +17,7 @@ class DownloadNotification(var notiId: Int) {
     companion object {
         private const val CHANNEL_ID = "DOWNLOAD_SERVICE"
         var INTENT_REQUEST_CODE = -1
-        const val MAX_PROGRESS = 5
+        const val MAX_PROGRESS = 100
     }
 
     private var currentProgress = 0

@@ -13,7 +13,7 @@ import kotlin.concurrent.thread
  * 이유는 동시에 여러 작업 요청(멀티 스레딩)을 처라하기 위해서 Service를 상속받아 구현한다.
  */
 class DownloadService : Service() {
-    private var notis = mutableMapOf<Int, ServiceThread>()
+    private var notis = mutableMapOf<Int, ServiceThread?>()
 
     override fun onCreate() {
         Log.d("DownloadService", "onCreate")
@@ -41,7 +41,6 @@ class DownloadService : Service() {
 
     // click event
     private fun clickNotification(notiId: Int) {
-        TODO("Not yet implemented")
     }
 
     override fun onDestroy() {
