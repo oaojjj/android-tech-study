@@ -14,6 +14,8 @@ class MainActivity : AppCompatActivity() {
         const val TAG = "MainActivity"
     }
 
+    var powerConnectionReceiver: PowerConnectionReceiver? = null
+
     private val binding by lazy { ActivityMainBinding.inflate(layoutInflater) }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,13 +26,24 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * 배터리 충전 연결 여부
+     * OREO 이후부터는 manifest에 예외적인 경우를 제외한 암시적 인텐트가 등록이 안되므로
+     * context를 통해 리시버 등록을 해야한다.
+     */
     override fun onResume() {
-
         super.onResume()
+        powerConnectionReceiver = PowerConnectionReceiver()
+        registerReceiver(powerConnectionReceiver, IntentFilter().apply {
+            addAction(Intent.ACTION_POWER_CONNECTED)
+            addAction(Intent.ACTION_POWER_DISCONNECTED)
+        })
     }
 
     override fun onStop() {
         super.onStop()
+        if (powerConnectionReceiver != null)
+            unregisterReceiver(powerConnectionReceiver)
     }
 
     /**
