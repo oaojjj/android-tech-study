@@ -41,7 +41,7 @@ class DownloadService : Service() {
             DownloadAction.ACTION_START_DOWNLOAD -> startForegroundService(notiId, imageUrl)
             DownloadAction.ACTION_PAUSE_DOWNLOAD -> threads[notiId]?.updateNotification(false)
             DownloadAction.ACTION_CONTINUE_DOWNLOAD -> threads[notiId]?.updateNotification(true)
-            DownloadAction.ACTION_CANCEL_DOWNLOAD -> stopForegroundService(notiId)
+            DownloadAction.ACTION_CANCEL_DOWNLOAD -> threads[notiId]?.stopThread()
             DownloadAction.ACTION_CLICK_NOTIFICATION -> clickNotification(notiId)
         }
 
@@ -95,12 +95,11 @@ class DownloadService : Service() {
             DownloadNotification(id).apply { createNotificationBuilder(this@DownloadService) }
         private val savePath = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS).toString()
         private var localPath = savePath
+        private var isStop = false
 
         override fun run() {
             Log.d("DownloadThread", "run: $savePath")
             downloading()
-            if (notification.isReachedMaxProgress()) completeDownload()
-            else cancelDownload()
         }
 
 
@@ -123,27 +122,27 @@ class DownloadService : Service() {
             var total: Long = 0
             var count: Int
 
-            while (inputStream.read(data)
-                    .also { count = it } != -1 || !notification.isReachedMaxProgress()
-            ) {
-                try {
-                    Log.d(
-                        "DownloadThread",
-                        "downloading: $total ,${(total * 100 / connection.contentLength)}"
-                    )
-                    outputStream.write(data, 0, count)
 
-                    total += count.toLong()
-                    notification.updateProgress((total * 100 / connection.contentLength).toInt())
-                } catch (e: InterruptedException) {
-                    break
-                }
+            while (inputStream.read(data).also { count = it } != -1
+                && !notification.isReachedMaxProgress() && !isStop) {
+
+                Log.d(
+                    "DownloadThread",
+                    "downloading: $total ,${(total * 100 / connection.contentLength)}"
+                )
+                outputStream.write(data, 0, count)
+
+                total += count.toLong()
+                notification.updateProgress((total * 100 / connection.contentLength).toInt())
             }
             inputStream.close()
             outputStream.close()
 
             Log.d("DownloadThread", "downloading: $file")
             sendBroadcast(Intent(Intent.ACTION_MEDIA_SCANNER_FINISHED, Uri.fromFile(file)))
+
+            if (notification.isReachedMaxProgress()) completeDownload()
+            else cancelDownload()
         }
 
 
@@ -180,7 +179,7 @@ class DownloadService : Service() {
 
         fun stopThread() {
             Log.d("DownloadThread", "stopThread:$id ")
-            interrupt()
+            isStop = true
         }
 
     }
