@@ -11,18 +11,15 @@ class MainActivity : AppCompatActivity(), OnReceiveBroadcastListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-    }
 
-    override fun onResume() {
-        super.onResume()
         customBRExample =
             CustomBRExample().apply { setOnReceiveBroadcastListener(this@MainActivity) }
         val intentFilter = IntentFilter(CustomBRExample.MY_ACTION)
         registerReceiver(customBRExample, intentFilter)
     }
 
-    override fun onPause() {
-        super.onPause()
+    override fun onDestroy() {
+        super.onDestroy()
         unregisterReceiver(customBRExample)
     }
 
