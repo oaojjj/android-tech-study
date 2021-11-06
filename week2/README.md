@@ -3,4 +3,4 @@
 https://5seong.notion.site/Service-eac36db6dd5f4dc0bf3feeae3bf89584<br>
 ### ServiceExample
 서비스를 이용하여 이미지를 다운로드 받는 동안 알림을 표시한다.<br>
-![example](https://im4.ezgif.com/tmp/ezgif-4-8d5cbfd6043b.gif)
+![example](https://user-images.githubusercontent.com/49146043/140591145-e92400a2-1c0a-45df-af2a-3dad5bf03e5c.gif)
