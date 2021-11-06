@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.broadcastreceiverexample">
 
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -20,14 +22,24 @@
         </activity>
 
         <!--배터리 충전 연결 여부 리시버, 하지만 Oreo 이후부터는 암시적 인텐트는 리시버에 등록이 안된다.-->
-       <!-- <receiver
+        <!-- <receiver
+             android:name=".PowerConnectionReceiver"
+             android:exported="false">
+             <intent-filter>
+                 <action android:name="android.intent.action.ACTION_POWER_CONNECTED" />
+                 <action android:name="android.intent.action.ACTION_POWER_DISCONNECTED" />
+             </intent-filter>
+         </receiver>-->
+
+        <!--암시적 브로드캐스트 예외 -->
+        <receiver
             android:name=".PowerConnectionReceiver"
+            android:enabled="true"
             android:exported="false">
             <intent-filter>
-                <action android:name="android.intent.action.ACTION_POWER_CONNECTED" />
-                <action android:name="android.intent.action.ACTION_POWER_DISCONNECTED" />
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
-        </receiver>-->
+        </receiver>
 
     </application>
 

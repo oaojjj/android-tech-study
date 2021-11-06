@@ -48,7 +48,7 @@ class MainActivity : AppCompatActivity() {
 
     /**
      *  배터리 잔량
-     *  BroadcastManager의 고정 인텐트를 사용하기 때문에
+     *  BroadcastManager의 sticky 인텐트를 사용하기 때문에
      *  브로드캐스트 등록할 필요 없음
      */
     private fun getBatteryRemainder(): Int {
