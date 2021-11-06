@@ -3,14 +3,13 @@ package com.example.mycustombrexample
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import android.widget.Toast
+import com.example.mycustombrexample.MainActivity.Companion.EXTRA_KEY
+import com.example.mycustombrexample.MainActivity.Companion.MY_ACTION
 import com.example.mycustombrexample.listener.OnReceiveBroadcastListener
 
 class CustomBRReceiver : BroadcastReceiver() {
-    companion object {
-        const val MY_ACTION = "com.oseong.action.EXAMPLE_ACTION"
-        const val EXTRA_KEY = "com.oseong.key.EXTRA_TEXT"
-    }
 
     private lateinit var mListener: OnReceiveBroadcastListener
 
@@ -20,9 +19,18 @@ class CustomBRReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context?, intent: Intent?) {
         if (intent?.action.equals(MY_ACTION)) {
-            val receivedText = intent?.getStringExtra(EXTRA_KEY)
-            Toast.makeText(context, "received broadcast", Toast.LENGTH_SHORT).show()
-            mListener.onReceivedBroadcast(receivedText)
+            Thread.sleep(1000)
+            val resultExtra = getResultExtras(true)
+            val receivedText = resultExtra.getString(EXTRA_KEY) + " -> receiver "
+            resultExtra.putString(EXTRA_KEY, receivedText)
+
+            //Toast.makeText(context, "received broadcast", Toast.LENGTH_SHORT).show()
+            Log.d("CustomBRReceiver", "onReceive: $receivedText")
+
+            // mListener.onReceivedBroadcast(receivedText)
+
+            // 최종 전달/반환 값
+            setResult(resultCode, "receiver", resultExtra)
         }
     }
 }
