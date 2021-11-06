@@ -3,14 +3,13 @@ package com.example.mycustombrsender
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import com.example.mycustombrsender.ResultReceiver.Companion.EXTRA_KEY
+import com.example.mycustombrsender.ResultReceiver.Companion.MY_ACTION
+import com.example.mycustombrsender.ResultReceiver.Companion.MY_PERMISSION
 import com.example.mycustombrsender.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
-    companion object {
-        const val MY_ACTION = "com.oseong.action.EXAMPLE_ACTION"
-        const val MY_PERMISSION = "com.oseong.permission.EXAMPLE_ACTION_PERMISSION"
-        const val EXTRA_KEY = "com.oseong.key.EXTRA_TEXT"
-    }
+
 
     private val binding by lazy { ActivityMainBinding.inflate(layoutInflater) }
 
@@ -22,7 +21,17 @@ class MainActivity : AppCompatActivity() {
             Intent().let {
                 it.action = MY_ACTION
                 it.putExtra(EXTRA_KEY, binding.etText.text.toString())
-                sendBroadcast(it, MY_PERMISSION)
+                // packageName 또는 componentName을 명시해주면 manifest에 등록해도 명시적 인텐트가 된다.
+                it.`package` = "com.example.mycustombrexample"
+                sendOrderedBroadcast(
+                    it,
+                    MY_PERMISSION,
+                    ResultReceiver(),
+                    null,
+                    0,
+                    "Start",
+                    Bundle().apply { putString(EXTRA_KEY, "Start") }
+                )
             }
         }
     }

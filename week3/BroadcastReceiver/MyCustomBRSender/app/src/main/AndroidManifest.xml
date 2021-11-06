@@ -2,9 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.mycustombrsender">
 
-    <permission
-        android:name="com.oseong.permission.EXAMPLE_ACTION_PERMISSION"
-        android:protectionLevel="signature" />
+    <permission android:name="com.oseong.permission.EXAMPLE_ACTION_PERMISSION" />
     <uses-permission android:name="com.oseong.permission.EXAMPLE_ACTION_PERMISSION" />
 
     <application
