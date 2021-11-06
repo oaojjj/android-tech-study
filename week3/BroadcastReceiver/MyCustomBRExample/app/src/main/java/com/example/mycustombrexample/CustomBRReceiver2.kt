@@ -6,7 +6,7 @@ import android.content.Intent
 import android.widget.Toast
 import com.example.mycustombrexample.listener.OnReceiveBroadcastListener
 
-class CustomBRExample : BroadcastReceiver() {
+class CustomBRReceiver2 : BroadcastReceiver() {
     companion object {
         const val MY_ACTION = "com.oseong.action.EXAMPLE_ACTION"
         const val EXTRA_KEY = "com.oseong.key.EXTRA_TEXT"
