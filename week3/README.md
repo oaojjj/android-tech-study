@@ -10,7 +10,7 @@ content provider : todo
 <br><br>
 ### MyCustomBRExample, MyCustomBRSender
 브로드캐스트 send 예제<br>
-<img src="https://im7.ezgif.com/tmp/ezgif-7-7d2c937eafb5.gif" width="300" height="600">
+<img src="https://user-images.githubusercontent.com/49146043/140591138-ab1331b7-73f5-4557-b3fa-90ee46d5fdb8.gif" width="300" height="600">
 <br><br>
 ### ContentProviderExample
 사진 가져와서 GridView에 뿌리기<br>
