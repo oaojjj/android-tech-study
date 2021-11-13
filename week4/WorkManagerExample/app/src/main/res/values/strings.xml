@@ -1,3 +1,24 @@
 <resources>
     <string name="app_name">WorkManagerExample</string>
+
+    <!-- Titles -->
+    <string name="blur_title">블러량을 선택하시오.</string>
+
+    <!-- Buttons -->
+    <string name="select_image">Select Image</string>
+    <string name="go">시작</string>
+    <string name="see_file">파일 보기</string>
+
+    <!-- Content descriptions -->
+    <string name="description_image">이미지를 블러 처리 후 저장했습니다.</string>
+
+    <!-- Blur levels -->
+    <string name="blur_lv_1">약간 블러 처리</string>
+    <string name="blur_lv_2">조금 블러 처리</string>
+    <string name="blur_lv_3">많은 블러 처리</string>
+    <string name="cancel_work">취소</string>
+
+    <!-- Messages -->
+    <string name="set_permissions_in_settings">Go to Settings -> Apps and Notifications ->
+        WorkManager Demo -> App Permissions and grant access to Storage.</string>
 </resources>
