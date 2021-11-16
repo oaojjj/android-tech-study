@@ -4,7 +4,11 @@ import android.content.Context
 import android.util.Log
 import androidx.lifecycle.*
 
-class MyObserver(private val context: Context, private val lifeCycle: Lifecycle) :
+class MyObserver(
+    private val context: Context,
+    private val lifeCycle: Lifecycle,
+    callback: () -> Unit
+) :
     DefaultLifecycleObserver {
 
     companion object {
@@ -13,9 +17,8 @@ class MyObserver(private val context: Context, private val lifeCycle: Lifecycle)
 
     override fun onCreate(owner: LifecycleOwner) {
         super.onCreate(owner)
-        context
         Log.d(TAG, "onCreate")
-        Log.d(TAG, Log.getStackTraceString(Exception()))
+        // Log.d(TAG, Log.getStackTraceString(Exception()))
     }
 
     override fun onStart(owner: LifecycleOwner) {
