@@ -66,8 +66,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
-        var prevProgress = savedInstanceState.getInt(MediaController.PROGRESS_KEY)
-        player.play(prevProgress)
+        val prevProgress = savedInstanceState.getInt(MediaController.PROGRESS_KEY)
+        if (prevProgress > 0)
+            player.play(prevProgress)
         super.onRestoreInstanceState(savedInstanceState)
     }
 }
