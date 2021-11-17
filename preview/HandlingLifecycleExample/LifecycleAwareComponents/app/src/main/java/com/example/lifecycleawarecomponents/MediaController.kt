@@ -2,6 +2,7 @@ package com.example.lifecycleawarecomponents
 
 import android.content.Context
 import android.media.MediaPlayer
+import android.util.Log
 import android.widget.SeekBar
 import java.lang.ref.SoftReference
 
@@ -12,28 +13,34 @@ enum class State {
 }
 
 object MediaController {
+    private const val TAG = "MediaController"
+
     private var mediaPlayer: MediaPlayer? = null
     private var prevPosition = 0
 
     private lateinit var state: State
 
-    private lateinit var seekBar: SoftReference<SeekBar>
     private lateinit var context: SoftReference<Context>
+    private lateinit var seekBar: SoftReference<SeekBar>
 
-    fun player(context: Context, seekBar: SeekBar): MediaController {
+    fun connect(context: Context, seekBar: SeekBar): MediaController {
         state = State.STOPPED
 
+        Log.d(TAG, "connect: $state")
         this.context = SoftReference(context)
         this.seekBar = SoftReference(seekBar)
+
         return this
     }
 
     fun play() {
+        Log.d(TAG, "play: $state")
         when (state) {
             State.STOPPED -> {
                 mediaPlayer = MediaPlayer.create(context.get(), R.raw.chacha)
-                state = State.PLAYING
+                seekBar.get()?.max = mediaPlayer!!.duration
 
+                state = State.PLAYING
                 mediaPlayer?.start()
                 thread().start()
             }
@@ -52,6 +59,7 @@ object MediaController {
     }
 
     fun pause() {
+        Log.d(TAG, "pause: $state")
         if (state == State.PLAYING) {
             state = State.PAUSED
 
@@ -61,6 +69,7 @@ object MediaController {
     }
 
     fun stop() {
+        Log.d(TAG, "stop: $state")
         if (state != State.STOPPED) {
             state = State.STOPPED
             mediaPlayer?.stop()
@@ -68,13 +77,13 @@ object MediaController {
     }
 
     private fun thread() = Thread {
-        seekBar.get()?.max = mediaPlayer!!.duration
         while (state == State.PLAYING) seekBar.get()?.progress = mediaPlayer!!.currentPosition
         if (state == State.STOPPED)
             seekBar.get()?.progress = 0
     }
 
-    fun release() {
+    fun disconnect() {
+        Log.d(TAG, "disconnect: $state")
         stop()
         context.clear()
         seekBar.clear()
