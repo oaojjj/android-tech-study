@@ -24,7 +24,12 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
         Log.d(TAG, "onCreate")
 
-        player = MediaController.connect(this, binding.sbMusic)
+        player = MediaController.connect(this, binding.sbMusic).apply {
+            this.liveProgress?.observe(this@MainActivity) {
+                // UI Update
+                binding.sbMusic.progress = it
+            }
+        }
 
         // 이렇게 사용하는게 맞나 모르겠음..
         observer = MyObserver(player)
@@ -36,17 +41,16 @@ class MainActivity : AppCompatActivity() {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 // Log.d(TAG, "onProgressChanged: ${seekBar?.max},$progress")
                 // 왜 drag 하고나면 max랑 progress랑 max값이 10~30 정도 오차가 생김.. why?
-                if (seekBar?.max!! <= progress + 30) {
-                    player.stop()
-                }
+                if (seekBar?.max!! <= progress) player.stop()
             }
 
             override fun onStartTrackingTouch(seekBar: SeekBar?) {
+                Log.d(TAG, "onStartTrackingTouch: ${seekBar?.progress}")
                 player.pause()
             }
 
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
-                player.play()
+                MediaController.restart(seekBar?.progress)
             }
         })
 
@@ -66,9 +70,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
-        val prevProgress = savedInstanceState.getInt(MediaController.PROGRESS_KEY)
-        if (prevProgress > 0)
-            player.play(prevProgress)
+        MediaController.restart(savedInstanceState.getInt(MediaController.PROGRESS_KEY))
         super.onRestoreInstanceState(savedInstanceState)
     }
 }

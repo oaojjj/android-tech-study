@@ -4,6 +4,7 @@ import android.content.Context
 import android.media.MediaPlayer
 import android.util.Log
 import android.widget.SeekBar
+import androidx.lifecycle.MutableLiveData
 import java.lang.ref.SoftReference
 
 enum class State {
@@ -24,51 +25,59 @@ object MediaController {
     private lateinit var context: SoftReference<Context>
     private lateinit var seekBar: SoftReference<SeekBar>
 
+    // with out ViewModel
+    var liveProgress: MutableLiveData<Int>? = null
+
     fun connect(context: Context, seekBar: SeekBar): MediaController {
         state = State.STOPPED
 
         Log.d(TAG, "connect: $state")
+        liveProgress = MutableLiveData(0)
         this.context = SoftReference(context)
         this.seekBar = SoftReference(seekBar)
 
         return this
     }
 
-    fun play(progress: Int = 0) {
+    fun play() {
         Log.d(TAG, "play: $state")
         when (state) {
             State.STOPPED -> {
                 state = State.PLAYING
 
                 mediaPlayer = MediaPlayer.create(context.get(), R.raw.chacha)
-                seekBar.get()?.max = mediaPlayer!!.duration
+                seekBar.get()?.max = mediaPlayer!!.duration - 50
 
-
-                mediaPlayer?.seekTo(progress)
-                mediaPlayer?.start()
-                thread().start()
+                start()
             }
             State.PAUSED -> {
                 state = State.PLAYING
 
-                val currentProgress = seekBar.get()!!.progress
-
-                if (prevPosition == currentProgress) mediaPlayer?.seekTo(prevPosition)
-                else mediaPlayer?.seekTo(currentProgress)
-
-                mediaPlayer?.start()
-                thread().start()
+                start()
             }
             else -> return
         }
+
+    }
+
+    private fun start() {
+        mediaPlayer?.seekTo(liveProgress?.value ?: 0)
+        mediaPlayer?.start()
+        thread().start()
+    }
+
+    fun restart(progress: Int?) {
+        liveProgress?.value = progress ?: 0
+        if (liveProgress?.value ?: -1 > 0)
+            play()
     }
 
     fun pause() {
         Log.d(TAG, "pause: $state")
+
         if (state == State.PLAYING) {
             state = State.PAUSED
 
-            prevPosition = mediaPlayer?.currentPosition ?: 0
             mediaPlayer?.pause()
         }
     }
@@ -78,22 +87,24 @@ object MediaController {
         if (state != State.STOPPED) {
             state = State.STOPPED
 
+            liveProgress?.value = 0
             mediaPlayer?.stop()
         }
     }
 
     private fun thread() = Thread {
-        while (state == State.PLAYING) seekBar.get()?.progress = mediaPlayer!!.currentPosition
+        while (state == State.PLAYING) liveProgress?.postValue(mediaPlayer!!.currentPosition)
         if (state == State.STOPPED)
-            seekBar.get()?.progress = 0
+            liveProgress?.postValue(0)
     }
 
     fun disconnect() {
         Log.d(TAG, "disconnect: $state")
+
         stop()
         context.clear()
         seekBar.clear()
+        liveProgress = null
         mediaPlayer?.release()
     }
-
 }

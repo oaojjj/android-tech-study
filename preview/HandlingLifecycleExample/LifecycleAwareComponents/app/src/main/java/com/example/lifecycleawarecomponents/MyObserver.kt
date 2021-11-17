@@ -7,9 +7,7 @@ import androidx.lifecycle.*
  * LifecycleObserver
  * @param player 파라미터로 받아서 쓰는게 맞는지 모르겠음..
  */
-class MyObserver(private val player: MediaController) :
-    DefaultLifecycleObserver {
-
+class MyObserver(private val player: MediaController) : DefaultLifecycleObserver {
     companion object {
         const val TAG = "MyObserver"
     }
