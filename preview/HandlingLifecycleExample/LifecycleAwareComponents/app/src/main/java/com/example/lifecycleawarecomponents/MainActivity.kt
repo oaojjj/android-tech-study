@@ -60,4 +60,14 @@ class MainActivity : AppCompatActivity() {
         binding.btnStop.setOnClickListener { player.stop() }
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putInt(MediaController.PROGRESS_KEY, binding.sbMusic.progress)
+        super.onSaveInstanceState(outState)
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        var prevProgress = savedInstanceState.getInt(MediaController.PROGRESS_KEY)
+        player.play(prevProgress)
+        super.onRestoreInstanceState(savedInstanceState)
+    }
 }

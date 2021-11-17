@@ -14,6 +14,7 @@ enum class State {
 
 object MediaController {
     private const val TAG = "MediaController"
+    const val PROGRESS_KEY = "PROGRESS KEY"
 
     private var mediaPlayer: MediaPlayer? = null
     private var prevPosition = 0
@@ -33,19 +34,23 @@ object MediaController {
         return this
     }
 
-    fun play() {
+    fun play(progress: Int = 0) {
         Log.d(TAG, "play: $state")
         when (state) {
             State.STOPPED -> {
+                state = State.PLAYING
+
                 mediaPlayer = MediaPlayer.create(context.get(), R.raw.chacha)
                 seekBar.get()?.max = mediaPlayer!!.duration
 
-                state = State.PLAYING
+
+                mediaPlayer?.seekTo(progress)
                 mediaPlayer?.start()
                 thread().start()
             }
             State.PAUSED -> {
                 state = State.PLAYING
+
                 val currentProgress = seekBar.get()!!.progress
 
                 if (prevPosition == currentProgress) mediaPlayer?.seekTo(prevPosition)
@@ -72,6 +77,7 @@ object MediaController {
         Log.d(TAG, "stop: $state")
         if (state != State.STOPPED) {
             state = State.STOPPED
+
             mediaPlayer?.stop()
         }
     }
