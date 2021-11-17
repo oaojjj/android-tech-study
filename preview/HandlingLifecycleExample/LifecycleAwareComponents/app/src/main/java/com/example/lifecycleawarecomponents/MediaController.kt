@@ -18,7 +18,6 @@ object MediaController {
     const val PROGRESS_KEY = "PROGRESS KEY"
 
     private var mediaPlayer: MediaPlayer? = null
-    private var prevPosition = 0
 
     private lateinit var state: State
 
@@ -39,8 +38,14 @@ object MediaController {
         return this
     }
 
-    fun play() {
+    /**
+     *  @param progress start position
+     */
+    fun play(progress: Int = 0) {
         Log.d(TAG, "play: $state")
+
+        if (progress > 0) liveProgress?.value = progress
+
         when (state) {
             State.STOPPED -> {
                 state = State.PLAYING
@@ -66,11 +71,6 @@ object MediaController {
         thread().start()
     }
 
-    fun restart(progress: Int?) {
-        liveProgress?.value = progress ?: 0
-        if (liveProgress?.value ?: -1 > 0)
-            play()
-    }
 
     fun pause() {
         Log.d(TAG, "pause: $state")

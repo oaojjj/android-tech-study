@@ -50,7 +50,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
-                MediaController.restart(seekBar?.progress)
+                MediaController.play(seekBar?.progress ?: 0)
             }
         })
 
@@ -70,7 +70,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
-        MediaController.restart(savedInstanceState.getInt(MediaController.PROGRESS_KEY))
+        val value = savedInstanceState.getInt(MediaController.PROGRESS_KEY)
+        if (value != 0) MediaController.play(value)
         super.onRestoreInstanceState(savedInstanceState)
     }
 }
