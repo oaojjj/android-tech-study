@@ -4,7 +4,8 @@ import android.content.ComponentName
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import com.example.model.User
+import com.example.model.ParcelableData
+import com.example.model.SerializableData
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -14,6 +15,7 @@ class MainActivity : AppCompatActivity() {
 
     fun sendData(view: android.view.View) {
         val serializableKey = "serializableKey"
+        val parcelableKey = "parcelableKey"
 
         val intent = Intent().apply {
             component = ComponentName(
@@ -22,7 +24,9 @@ class MainActivity : AppCompatActivity() {
             )
         }
 
-        intent.putExtra(serializableKey, User("osg", 26, "hi~ my nickname is osg"))
+        intent.putExtra(serializableKey, SerializableData("i am serializable"))
+        intent.putExtra(parcelableKey, ParcelableData("i am parcelable"))
+
         startActivity(intent)
     }
 }
