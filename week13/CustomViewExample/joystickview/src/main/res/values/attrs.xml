@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="JoystickView">
+        <!-- 스틱의 배경색상을 지정 -->
+        <attr name="joystickBackgroundColor" format="color" />
+
+        <!-- 스틱의 색상을 지정 -->
+        <attr name="joystickStickColor" format="color" />
+
+        <!-- 조이스틱 뷰 영역에서 배경이 차지하는 비율을 지정 -->
+        <attr name="joystickBackgroundRatio" format="fraction" />
+
+        <!-- 조이스틱 뷰 영역에서 스틱이 차지하는 비율을 지정 -->
+        <attr name="joystickStickRatio" format="fraction" />
+
+        <!-- 스틱을 놓았을 때 배경의 중앙으로 스틱이 이동하는지 여부 -->
+        <attr name="joystickUseSpring" format="boolean" />
+    </declare-styleable>
+</resources>
